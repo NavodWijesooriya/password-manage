@@ -145,17 +145,17 @@ def dashboard():
     decrypted_data = []
     for row in data:
         try:
-            # row[1] = site, row[2] = username, row[3] = password
+            # row[0] = id, row[1] = site, row[2] = username, row[3] = password
             encrypted_password = row[3]
             if isinstance(encrypted_password, str):
                 decrypted_password = fernet.decrypt(encrypted_password.encode()).decode()
             else:
                 # Handle case where password might be stored differently
                 decrypted_password = "Error: Invalid password format"
-            decrypted_data.append((row[1], row[2], decrypted_password))
+            decrypted_data.append((row[0], row[1], row[2], decrypted_password))
         except Exception as e:
             # Handle decryption errors gracefully
-            decrypted_data.append((row[1], row[2], "Error: Could not decrypt"))
+            decrypted_data.append((row[0], row[1], row[2], "Error: Could not decrypt"))
     
     return render_template('dashboard.html', data=decrypted_data)
 
@@ -171,6 +171,18 @@ def add():
     c = conn.cursor()
     c.execute("INSERT INTO passwords (user_id, site, username, password) VALUES (?, ?, ?, ?)",
               (current_user.id, site, username, password))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('dashboard'))
+
+
+@app.route('/delete/<int:password_id>', methods=['POST'])
+@login_required
+def delete_password(password_id):
+    conn = sqlite3.connect('passwords.db')
+    c = conn.cursor()
+    # Ensure user can only delete their own passwords
+    c.execute("DELETE FROM passwords WHERE id = ? AND user_id = ?", (password_id, current_user.id))
     conn.commit()
     conn.close()
     return redirect(url_for('dashboard'))
