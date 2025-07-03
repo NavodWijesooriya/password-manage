@@ -7,14 +7,14 @@
 </head>
 
 <body>
-  <h2>Add New Password</h2>
-  <form method="post" action="/add">
-    <input type="text" name="site" placeholder="Website" required>
-    <input type="text" name="username" placeholder="Username/Email" required>
-    <input type="password" name="password" placeholder="Password" required>
-    <button type="submit">Save</button>
-  </form>
-  <a href="/dashboard">View Saved Passwords</a>
+  <div class="home-container">
+    <h1>Welcome to Password Manager</h1>
+    <p>Securely store and manage your passwords</p>
+    <div class="auth-buttons">
+      <a href="/login" class="btn">Login</a>
+      <a href="/signup" class="btn">Sign Up</a>
+    </div>
+  </div>
 </body>
 
 </html>

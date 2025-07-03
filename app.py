@@ -80,6 +80,8 @@ def load_user(user_id):
 
 @app.route('/')
 def home():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
     return render_template('index.html')
 
 
@@ -136,11 +138,25 @@ def logout():
 def dashboard():
     conn = sqlite3.connect('passwords.db')
     c = conn.cursor()
-    c.execute("SELECT * FROM passwords WHERE user_id = ?", (current_user.id,))
+    c.execute("SELECT id, site, username, password FROM passwords WHERE user_id = ?", (current_user.id,))
     data = c.fetchall()
     conn.close()
-    decrypted_data = [(row[1], row[2], fernet.decrypt(
-        row[3].encode()).decode()) for row in data]
+    
+    decrypted_data = []
+    for row in data:
+        try:
+            # row[1] = site, row[2] = username, row[3] = password
+            encrypted_password = row[3]
+            if isinstance(encrypted_password, str):
+                decrypted_password = fernet.decrypt(encrypted_password.encode()).decode()
+            else:
+                # Handle case where password might be stored differently
+                decrypted_password = "Error: Invalid password format"
+            decrypted_data.append((row[1], row[2], decrypted_password))
+        except Exception as e:
+            # Handle decryption errors gracefully
+            decrypted_data.append((row[1], row[2], "Error: Could not decrypt"))
+    
     return render_template('dashboard.html', data=decrypted_data)
 
 
